@@ -1,15 +1,37 @@
 // Define mongoose for schema creation.
 const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
+
+console.log("Before schema setup (Reaction)");
 
 // Build Reactions Schema.
 const reactionSchema = new mongoose.Schema({
     reactionId:   { type: ObjectId, default: new ObjectId },
     reactionBody: { type: String, required: true, maxlength: 280 },
     username:     { type: String, required: true },
-    createdAt:    { type: Date, default: new Date.toDateString, get: (date) => date.toDateString() },
-    ReactionCount:{ type: Number, default: 0 /* , get: userModel.countDocuments({name: 'anand'}, function(err, c) { console.log('Count is ' + c); }) */}
+    createdAt:    { type: Date, default: Date.now, get: (date) => date.toDateString() },
 })
+
+console.log("After schema setup (Reaction)");
 
 // Uses mongoose.model() to create model
 const Reaction = mongoose.model('Reaction', reactionSchema);
-module.exports = { Reaction };
+
+// Error handler for seeding data.
+const handleError = (err) => console.error(err);
+ 
+// Only add the seeds if the collection is empty.
+Reaction.find({}).exec((err, collection) => {
+    if (collection.length === 0) {
+        // Create JSON entry w/seeds.
+        Reaction.create(
+            {
+                reactionBody: 'Wow what a thought.',
+                username: 'Brian Zoulko',
+            },
+            (err) => (err ? handleError(err) : console.log('Created new Reaction (Seeds) document'))
+        );
+    }
+});
+  
+module.exports = Reaction;
