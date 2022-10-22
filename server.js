@@ -1,31 +1,27 @@
 const express = require('express');
-const mongodb = require('mongodb').MongoClient;
+const db = require('./config/connection');
+// TODO: Add a comment describing the functionality of the code below
+const { Book } = require('./models');
 
+const PORT = process.env.PORT || 3001;
 const app = express();
-const port = 3001;
 
-const connectionStringURI = `mongodb://127.0.0.1:27017/inventoryDB`;
-
-let db;
-
-mongodb.connect(
-  connectionStringURI,
-  { useNewUrlParser: true, useUnifiedTopology: true },
-  (err, client) => {
-    db = client.db();
-    app.listen(port, () => {
-      console.log(`Server is listening at http://localhost:${port}`);
-    });
-  }
-);
-
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(require('./routes'));
+app.get('/all-books', (req, res) => {
+  // TODO: Add a comment describing the functionality of the code below
+  Book.find({}, (err, result) => {
+    if (err) {
+      res.status(500).send({ message: 'Internal Server Error' });
+    } else {
+      res.status(200).json(result);
+    }
+  });
+});
 
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}!`);
-  sequelize.sync({ force: false });
+db.once('open', () => {
+  app.listen(PORT, () => {
+    console.log(`API server running on port ${PORT}!`);
+  });
 });
