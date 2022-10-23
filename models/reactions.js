@@ -6,11 +6,15 @@ console.log("Before schema setup (Reaction)");
 
 // Build Reactions Schema.
 const reactionSchema = new mongoose.Schema({
-    reactionId:   { type: ObjectId, default: new ObjectId },
-    reactionBody: { type: String, required: true, maxlength: 280 },
-    username:     { type: String, required: true },
-    createdAt:    { type: Date, default: Date.now, get: (date) => date.toDateString() },
-})
+    reactionId:     { type: ObjectId, default: new ObjectId },
+    reactionBody:   { type: String, required: true, maxlength: 280 },
+    username:       { type: String, required: true },
+    createdAt:      { type: Date, default: Date.now, get: (date) => date.toDateString() },
+}, {
+    toObject:       { populate: true },
+    toJSON:         { getters: true }
+});
+
 
 console.log("After schema setup (Reaction)");
 

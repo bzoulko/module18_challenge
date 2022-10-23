@@ -10,12 +10,13 @@ const thoughtSchema = new mongoose.Schema({
   thoughtText:  { type: String, required: true, minlength: 1, maxlength: 128 },
   createdAt:    { type: Date, default: Date.now, get: (date) => date.toDateString() },
   username:     { type: String, required: true },
-  reactions:    [{type: ObjectId, ref: reactions.modelName}],
-  reactionCount:{ type: Number, default: 0, ref: 'Thought', count: true }
+  reactions:    [{type: ObjectId, ref: reactions.modelName, populate: true}],
+  reactionCount:{ type: Number, default: 0, ref: 'Thought', count: true, populate: true }
   // reactionCount:{ type: Number, default: 0, count: true /* , get: userModel.countDocuments({name: 'anand'}, function(err, c) { console.log('Count is ' + c); }) */}
 }, {
+  toObject:     { populate: true },
   timestamps:   true,
-  toJSON:       { getters: true, virtuals: true },
+  toJSON:       { getters: true, virtuals: true }
 });
 
 console.log("After schema setup (Thought)");

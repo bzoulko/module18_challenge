@@ -11,15 +11,19 @@ const userSchema = new mongoose.Schema({
   username:     { type: String, unique: true, required: true, trim: true},
   email:        { type: String, required: true, unique: true, match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/},
   
-  thoughts:     [{type: ObjectId, ref: thoughts.modelName, localField: '_id', foreignField: '_id'}],
-  friends:      [{type: ObjectId, ref: userModelName, localField: '_id', foreignField: '_id'}],
-  friendCount:  { type: Number, default: 0, ref: userModelName, localField: '_id', foreignField: '_id', count: true}
+  thoughts:     [{type: ObjectId, ref: thoughts.modelName, localField: '_id', foreignField: '_id', populate: true}],
+  friends:      [{type: ObjectId, ref: userModelName, localField: '_id', foreignField: '_id', populate: true}],
+  friendCount:  { type: Number, default: 0, ref: userModelName, localField: '_id', foreignField: '_id', count: true, populate: true}
 
   // thoughts:     [{type: ObjectId, ref: thoughts.modelName}],
   // friends:      [{type: ObjectId, ref: userModelName, localField: '_id'}],
   // friendCount:  { type: Number, default: 0, ref: userModelName, localField: '_id', count: true}
 },{
-  toObject:     { virtuals: true },
+  toObject: { 
+    transform: function (doc, ret) {
+      delete ret._id;
+    }
+  },
   toJSON:       { virtuals: true }
 });
 // friendCount:  { type: Number, default: 0, get: userModel.countDocuments({name: 'anand'}, function(err, c) { console.log('Count is ' + c); })}

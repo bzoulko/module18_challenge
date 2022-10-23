@@ -4,9 +4,9 @@ const URL_DB = 'mongodb://127.0.0.1:27017/';
 const DB_NAME = 'socialNetworkDB';
 
 
-// Drop Database if it exists...
-const connection = mongoose.connection;
-connection.once("open", async () => await mongoose.connection.db.dropDatabase( console.log(`${connection.db.databaseName} database dropped.`)));
+// // Drop Database if it exists...
+// const connection = mongoose.connection;
+// connection.once("open", async () => await mongoose.connection.db.dropDatabase( console.log(`${connection.db.databaseName} database dropped.`)));
 
 
 //Wrap Mongoose around local connection to MongoDB
