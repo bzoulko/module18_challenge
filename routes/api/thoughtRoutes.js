@@ -9,11 +9,8 @@ router.get('/', (req, res) => {
     const errMsg = `{ msg: Nothing found! }`;
 
     Thought.find({}, (err, result) => {
-        if (result) {
-            res.status(200).json(result);
-        } else {
-            res.status(500).send(errMsg);
-        }
+        if (err) res.status(500).send(err + " " + errMsg);
+        res.status(200).json(result);
     });
 });
 
@@ -61,44 +58,13 @@ router.post('/', (req, res) => {
 });
 
 
-// Update all associated users thoughts.
-function UpdateAllUsersThoughts(thoughts) {
-    // Update all thoughts to all associated users.
-    for (thought in thoughts) {
-        UpdateAUsersThought(thought);
-    }
-}
-
-
-// Update an associated users thought.
-function UpdateAUsersThought(thought) {
-    let userId = thought.userId;
-
-    // Make sure input Id's meet the required length and locate the user.
-    if (userId.length == 12 || userId.length == 24) {
-        User.findOne({_id: userId }, function(err, user) {
-
-            // Check for errors, if none, append to parent.
-            if (err) res.json(err + " " + errMsg);            
-            user.thoughts.push(thoughtId);
-
-            // Update user with new a thought.
-            User.updateOne({ _id: userId }, { $set: user } )
-                .catch((err) => res.json(err + " " + errMsg));
-
-        });
-    }
-
-}
-
-
 // POST (UPDATE) a reaction in a thought.
 router.post('/:thoughtId/reactions', (req, res) => {
 
     // Define input variables from POST.
     let thoughtId = req.params.thoughtId;
     let reactions = req.body;
-    let errMsg = `{ msg: Unable to UPDATE: ${"Thought - " + thoughtId + "  w/Reactions - " + JSON.stringify(reactions)} }`;
+    let errMsg = `{ msg: Unable to UPDATE: Thought - ${thoughtId}  w/Reactions - ${JSON.stringify(reactions)} }`;
     
     // Make sure input Id's meet the required length and locate the user.
     if (reactions) {        
@@ -106,12 +72,29 @@ router.post('/:thoughtId/reactions', (req, res) => {
 
             // Check for errors, if none, append to parent.
             if (err) res.json(err + " " + errMsg);
-            thought.reactions.push(...reactions);
 
-            // Update thought with new reaction.
-            Reaction.updateOne({ _id: userId }, { $set: user })
-                .then((result) => res.json(result))
-                .catch((err) => res.json(err + " " + errMsg));
+            // Determine when more than one is being posted.
+            if (reactions.length) {
+
+                Reaction.insertMany(reactions)
+                    .then((results) => {
+                        // Loop thgough all results and apply associated reaction id's.
+                        for (let reaction in results) {
+                            let reactionId = getId(Reaction, reaction.reactionId);
+                            if (reactionId != "") thought.reactions.push(reactionId)
+                        }
+                    })
+                    .catch((err) => res.json(err + " " + errMsg));
+
+            } else {        
+                Reaction.create(reactions)
+                    .then((reaction) => {
+                        // Apply associated reaction id.
+                        let reactionId = getId(Reaction, reaction.reactionId);
+                        if (reactionId != "") thought.reactions.push(reactionId)
+                    })
+                    .catch((err) => res.json(err + " " + errMsg));
+            }
 
         });
     } else {
@@ -141,6 +124,60 @@ router.delete('/:_id', (req, res) => {
         .then((result) => res.json(result))
         .catch((err) => res.json(err + " " + errMsg));
 });
+
+
+/**
+ * Update all associated users thoughts.
+ * @param {thoughts}  
+ */
+function UpdateAllUsersThoughts(thoughts) {
+    // Update all thoughts to all associated users.
+    for (thought in thoughts) {
+        UpdateAUsersThought(thought);
+    }
+}
+
+
+/**
+ * Update an associated users thought.
+ * @param {thought}  
+ */
+function UpdateAUsersThought(thought) {
+    let userId = thought.userId;
+
+    // Make sure input Id's meet the required length and locate the user.
+    if (userId.length == 12 || userId.length == 24) {
+        User.findOne({_id: userId }, function(err, user) {
+
+            // Check for errors, if none, append to parent.
+            if (err) res.json(err + " " + errMsg);            
+            user.thoughts.push(thoughtId);
+
+            // Update user with new a thought.
+            User.updateOne({ _id: userId }, { $set: user } )
+                .catch((err) => res.json(err + " " + errMsg));
+
+        });
+    }
+
+}
+
+
+/**
+ * GET Id.
+ * @param {} Table 
+ * @param {} Id 
+ * @returns 
+ */
+const getId = function (Table, Id) {
+
+    Table.findOne({_id: Id}, (err, detail) => {        
+        if (err) return("[{" + JSON.stringify(err) + "}]");
+        return (detail._id)
+    });
+
+    return ("");
+}           
 
 
 module.exports = router;

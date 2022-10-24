@@ -1,5 +1,7 @@
 const router = require('express').Router();
 const User = require('../../models/users');
+const Thought = require('../../models/thoughts');
+const Reaction = require('../../models/reactions');
 
 
 // GET (FIND) all users.
@@ -7,11 +9,8 @@ router.get('/', (req, res) => {
     const errMsg = `{ msg: Nothing found! }`;
 
     User.find({}, (err, result) => {
-        if (result) {
-            res.status(200).json(result);
-        } else {
-            res.status(500).send(errMsg);
-        }
+        if (err) res.status(500).send(err + " " + errMsg);
+        res.status(200).json(result);
     });
 });
 
@@ -22,8 +21,44 @@ router.get('/:_id', (req, res) => {
     const errMsg = `{ msg: '${id}' - Not found! }`;
 
     if (id.length == 12 || id.length == 24) {
+
+        // Locate User Detail.
         User.findOne({_id: id }, function(err, user) {
+
+            // Retrun if Error.
             if (err) res.status(500).json(err + " " + errMsg);            
+
+            // Loop though all Thought Id's
+            const thoughts = [{}];
+            const ids = JSON.parse(JSON.stringify(user.thoughts));
+            for (let x = 0; x < ids.length; x++) {
+
+                // Get Associated Thought Detail.
+                console.log("ids[" + x + "]: " + ids[x].toString());
+                const thought = GetAssociatedDetail(Thought, ids[x].toString());
+                console.log("thought: " + JSON.stringify(thought));
+
+                // Loop through all Thought Reaction Id's.
+                const reactions = [{}];
+                for (let reactionId in thought.reactions) {
+
+                    // Get Associated Thought Reaction Detail.
+                    console.log("reactionId: " + reactionId);
+                    const reaction = GetAssociatedDetail(Reaction, reactionId);
+                    reactions.push(reaction);
+                }
+                console.log("Reactions: " + JSON.stringify(reactions));
+
+                // Apply Reactions to Thought Detail.
+                thought.reactions = reactions;
+                thoughts.push(thought);
+            }
+
+            // Apply Thoughts to User Detail. 
+            user.thoughts = thoughts;
+            console.log("Thoughts: " + JSON.stringify(thoughts));
+
+            // Return User Detail.
             res.status(200).json(user);
         });
     } else {
@@ -204,6 +239,18 @@ router.delete('/:userId/thoughts/:thoughtId', (req, res) => {
     }
 
 });
+
+
+// GET all associated detail.
+const GetAssociatedDetail = function (Table, Id) {
+
+    Table.find({_id: Id}, (err, detail) => {
+        if (err) return("[{" + JSON.stringify(err) + "}]");
+        return (detail)
+    });
+
+    return ("[{}]");
+}
 
 
 module.exports = router;

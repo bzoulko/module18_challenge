@@ -11,13 +11,14 @@ const thoughtSchema = new mongoose.Schema({
   createdAt:    { type: Date, default: Date.now, get: (date) => date.toDateString() },
   username:     { type: String, required: true },
   reactions:    [{type: ObjectId, ref: reactions.modelName, populate: true}],
-  reactionCount:{ type: Number, default: 0, ref: 'Thought', count: true, populate: true }
-  // reactionCount:{ type: Number, default: 0, count: true /* , get: userModel.countDocuments({name: 'anand'}, function(err, c) { console.log('Count is ' + c); }) */}
 }, {
   toObject:     { populate: true },
   timestamps:   true,
   toJSON:       { getters: true, virtuals: true }
 });
+
+// Create a virtual property `reactionCount` that gets the amount of reactions per thought.
+thoughtSchema.virtual('reactionCount').get(() => this.reactions.length);
 
 console.log("After schema setup (Thought)");
 

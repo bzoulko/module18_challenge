@@ -1,14 +1,13 @@
 const router = require('express').Router();
 const Reaction = require('../../models/reactions');
 
-// Find ALL Thoughts.
+// GET (FIND) ALL Reactions.
 router.get('/', (req, res) => {
+    const errMsg = `{ msg: Nothing found! }`;
+
     Reaction.find({}, (err, result) => {
-        if (result) {
-            res.status(200).json(result);
-        } else {
-            res.status(500).send({ message: '(Reaction Model) Internal Server Error' });
-        }
+        if (err) res.status(500).send(err + " " + errMsg);
+        res.status(200).json(result);
     });
 });
 
