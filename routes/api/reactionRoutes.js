@@ -39,30 +39,32 @@ router.post('/', (req, res) => {
 
 
 // DELETE - reaction by _id.
-router.delete('/:_id', (req, res) => {
+router.delete('/:_id', async (req, res) => {
     let id = req.params._id;
     let errMsg = `{ msg: Unable to DELETE: '${id}' }`;
 
-    // Remove reaction.
-    Reaction.deleteOne({ _id: id })
-        .then((result) => res.json(result))
-        .catch((err) => res.json(err + " " + errMsg));
-    
     // Remove any reaction id referrenced in thoughts.
-    let thoughts = Thought.find({ reactions: id });
-    if (thoughts) {
-        for (let thought in thoughts) {
-            if (thought && thought.reactions) {
-                console.log("thought: " + thought);
-                console.log("thought.reactions: " + thought.reactions);
-                let index = thought.reactions.indexOf(id);
-                if (index > -1) {
-                    thought.reactions.slice(index, 1);
-                    Thought.updateOne({ _id: thought._id }, { $set: thought });
+    Thought.find({ reactions: id }, async (req, thoughts) => {
+        if (thoughts) {
+            for (let thought in thoughts) {
+                if (thought && thought.length) {
+                    if (thought.reactions) {
+                        let index = thought.reactions.indexOf(id);
+                        if (index > -1) {
+                            thought.reactions.slice(index, 1);
+                            thought.reactionCount = thought.reactions.length;
+                            Thought.updateOne({ _id: thought._id }, { $set: thought });
+                        }
+                    }
                 }
             }
         }
-    }
+    });
+
+    // Remove reaction.
+    await Reaction.deleteOne({ _id: id })
+        .then((result) => res.json(result))
+        .catch((err) => res.json(err + " " + errMsg));    
 
 });
 

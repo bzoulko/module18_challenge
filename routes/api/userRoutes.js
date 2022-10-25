@@ -213,6 +213,7 @@ router.delete('/:userId/friends/:friendId', (req, res) => {
 
             if (index > -1) {
                 user.friends.splice(index, 1); 
+                user.friendCount = user.friends.length;
 
                 // Update user with new friends list
                 User.updateOne({ _id: userId }, { $set: user })

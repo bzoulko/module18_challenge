@@ -38,9 +38,9 @@ router.post('/', (req, res) => {
 
     let body = JSON.stringify(req.body);
     let errMsg = `{ msg: Unable to ADD: ${body} }`;
-    let thoughts = JSON.parse(body);
+    let thoughts = req.body;
     
-    // Determine when more than one is being posted.
+    // Determine when more than one is being posted.    
     if (thoughts.length) {
         Thought.insertMany(thoughts)
             .then((result) => {
@@ -155,10 +155,10 @@ router.delete('/:_id', (req, res) => {
  * Update all associated users thoughts.
  * @param {thoughts}  
  */
-function UpdateAllUsersThoughts(thoughts) {
+async function UpdateAllUsersThoughts(thoughts) {
     // Update all thoughts to all associated users.
-    for (thought in thoughts) {
-        UpdateAUsersThought(thought);
+    for (let thought in thoughts) {
+        await UpdateAUsersThought(thought);
     }
 }
 
@@ -167,22 +167,20 @@ function UpdateAllUsersThoughts(thoughts) {
  * Update an associated users thought.
  * @param {thought}  
  */
-function UpdateAUsersThought(thought) {
+async function UpdateAUsersThought(thought) {
     let userId = thought.userId;
 
     // Make sure input Id's meet the required length and locate the user.
-    if (userId.length == 12 || userId.length == 24) {
-        User.findOne({_id: userId }, function(err, user) {
+    User.findOne({_id: userId }, function(err, user) {
 
-            // Check for errors, if none, append to parent.
-            if (err) res.json(err + " " + errMsg);            
+        // Check for errors, if none, append to parent.
+        if (err) res.json(err + " " + errMsg);            
 
-            // Update user with new a thought.
-            User.updateOne({ _id: userId }, { $set: user } )
-                .catch((err) => res.json(err + " " + errMsg));
+        // Update user with new a thought.
+        User.updateOne({ _id: userId }, { $set: user } )
+            .catch((err) => res.json(err + " " + errMsg));
 
-        });
-    }
+    });
 
 }
 
