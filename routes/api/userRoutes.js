@@ -3,14 +3,39 @@ const User = require('../../models/users');
 const Thought = require('../../models/thoughts');
 const Reaction = require('../../models/reactions');
 
-
 // GET (FIND) all users.
 router.get('/', (req, res) => {
     const errMsg = `{ msg: Nothing found! }`;
 
-    User.find({}, (err, result) => {
+    User.find({}, async (err, users) => {
         if (err) res.status(500).send(err + " " + errMsg);
-        res.status(200).json(result);
+        for (let u = 0; u < users.length; u++) {            
+            let user = users[u];
+
+            // Get Friend Detail.
+            if (user.friends) {
+                let ids = JSON.parse(JSON.stringify(user.friends));
+                user.friends = await GetDetail(User, ids);
+            }
+
+            // Get Thought Detail.
+            if (user && user.thoughts) {
+                let ids = JSON.parse(JSON.stringify(user.thoughts));
+                user.thoughts = await GetDetail(Thought, ids);
+            }
+
+            // Get Reaction Detail for each Thought.
+            if (user && user.thoughts) {
+                for (let x = 0; x < user.thoughts.length; x++) {
+                    let ids = JSON.parse(JSON.stringify(user.thoughts[x].reactions));
+                    user.thoughts[x].reactions = await GetDetail(Reaction, ids);
+                }
+            }
+
+            // Put extended user detail back in the user array.
+            users[u] = user;
+        }
+        res.status(200).json(users);
     });
 });
 
@@ -23,41 +48,31 @@ router.get('/:_id', (req, res) => {
     if (id.length == 12 || id.length == 24) {
 
         // Locate User Detail.
-        User.findOne({_id: id }, function(err, user) {
+        User.findOne({_id: id }, async function(err, user) {
 
             // Retrun if Error.
-            if (err) res.status(500).json(err + " " + errMsg);            
-
-            // Loop though all Thought Id's
-            const thoughts = [{}];
-            const ids = JSON.parse(JSON.stringify(user.thoughts));
-            for (let x = 0; x < ids.length; x++) {
-
-                // Get Associated Thought Detail.
-                console.log("ids[" + x + "]: " + ids[x].toString());
-                const thought = GetAssociatedDetail(Thought, ids[x].toString());
-                console.log("thought: " + JSON.stringify(thought));
-
-                // Loop through all Thought Reaction Id's.
-                const reactions = [{}];
-                for (let reactionId in thought.reactions) {
-
-                    // Get Associated Thought Reaction Detail.
-                    console.log("reactionId: " + reactionId);
-                    const reaction = GetAssociatedDetail(Reaction, reactionId);
-                    reactions.push(reaction);
-                }
-                console.log("Reactions: " + JSON.stringify(reactions));
-
-                // Apply Reactions to Thought Detail.
-                thought.reactions = reactions;
-                thoughts.push(thought);
+            if (err) res.status(500).json(err + " " + errMsg);
+            
+            // Get Friend Detail.
+            if (user && user.friends) {
+                let ids = JSON.parse(JSON.stringify(user.friends));
+                user.friends = await GetDetail(User, ids);
             }
 
-            // Apply Thoughts to User Detail. 
-            user.thoughts = thoughts;
-            console.log("Thoughts: " + JSON.stringify(thoughts));
+            // Get Thought Detail.
+            if (user && user.thoughts) {
+                let ids = JSON.parse(JSON.stringify(user.thoughts));
+                user.thoughts = await GetDetail(Thought, ids);
+            }
 
+            // Get Reaction Detail for each Thought.
+            if (user && user.thoughts && user.thoughts.length) {
+                for (let x = 0; x < user.thoughts.length; x++) {
+                    let ids = JSON.parse(JSON.stringify(user.thoughts[x].reactions));
+                    user.thoughts[x].reactions = await GetDetail(Reaction, ids);
+                }
+            }
+            
             // Return User Detail.
             res.status(200).json(user);
         });
@@ -65,6 +80,16 @@ router.get('/:_id', (req, res) => {
         res.json(errMsg);
     }
 });
+
+async function GetDetail (table, ids) {
+    let detail = [];
+    for (let x = 0; x < ids.length; x++) {                    
+        let res = await table.findOne({ _id: ids[x].toString() });
+        if (res) detail.push(res);
+    }
+    return(detail);
+}
+
 
 
 // POST (ADD) one or more users.
@@ -97,14 +122,15 @@ router.post('/:userId/friends/:friendId', (req, res) => {
     
     // Make sure input Id's meet the required length and locate the user.
     if (userId.length == 12 || userId.length == 24) {
-        User.findOne({_id: userId }, function(err, user) {
+        User.findOne({_id: userId }, async function(err, user) {
 
             // Check for errors, if none, append to parent.
             if (err) res.json(err + " " + errMsg);            
             user.friends.push(friendId);
+            user.friendCount = user.friends.length;
 
             // Update user with new a friend.
-            User.updateOne({ _id: userId }, { $set: user } )
+            await User.updateOne({ _id: userId }, { $set: user } )
                 .then((result) => res.json(result))
                 .catch((err) => res.json(err + " " + errMsg));
 
@@ -239,18 +265,6 @@ router.delete('/:userId/thoughts/:thoughtId', (req, res) => {
     }
 
 });
-
-
-// GET all associated detail.
-const GetAssociatedDetail = function (Table, Id) {
-
-    Table.find({_id: Id}, (err, detail) => {
-        if (err) return("[{" + JSON.stringify(err) + "}]");
-        return (detail)
-    });
-
-    return ("[{}]");
-}
 
 
 module.exports = router;

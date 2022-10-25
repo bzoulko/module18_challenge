@@ -2,6 +2,8 @@ const router = require('express').Router();
 const User = require('../../models/users');
 const Thought = require('../../models/thoughts');
 const Reaction = require('../../models/reactions');
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 
 
 // GET (FIND) ALL Thoughts.
@@ -65,43 +67,54 @@ router.post('/:thoughtId/reactions', (req, res) => {
     let thoughtId = req.params.thoughtId;
     let reactions = req.body;
     let errMsg = `{ msg: Unable to UPDATE: Thought - ${thoughtId}  w/Reactions - ${JSON.stringify(reactions)} }`;
-    
-    // Make sure input Id's meet the required length and locate the user.
-    if (reactions) {        
-        Thought.findOne({_id: thoughtId }, function(err, thought) {
 
-            // Check for errors, if none, append to parent.
-            if (err) res.json(err + " " + errMsg);
-
-            // Determine when more than one is being posted.
-            if (reactions.length) {
-
-                Reaction.insertMany(reactions)
-                    .then((results) => {
-                        // Loop thgough all results and apply associated reaction id's.
-                        for (let reaction in results) {
-                            let reactionId = getId(Reaction, reaction.reactionId);
-                            if (reactionId != "") thought.reactions.push(reactionId)
-                        }
-                    })
-                    .catch((err) => res.json(err + " " + errMsg));
-
-            } else {        
-                Reaction.create(reactions)
-                    .then((reaction) => {
-                        // Apply associated reaction id.
-                        let reactionId = getId(Reaction, reaction.reactionId);
-                        if (reactionId != "") thought.reactions.push(reactionId)
-                    })
-                    .catch((err) => res.json(err + " " + errMsg));
-            }
-
-        });
-    } else {
-        res.json(errMsg);
+    // Determine when more than one is being posted.
+    if (reactions.length) {
+        Reaction.insertMany(reactions)
+            .then((result) => {
+                UpdateThoughtReactions(thoughtId, result);
+                res.send(result);
+            })
+            .catch((err) => res.json(err + " " + errMsg));
+    } else {        
+        Reaction.create(reactions)
+            .then((result) => {
+                UpdateThoughtReactions(thoughtId, result);
+                res.json(result)
+            })
+            .catch((err) => res.json(err + " " + errMsg));
     }
 
 });
+
+
+/**
+ * Update associated thought with reaction id(s).
+ * @param {*} thoughtId 
+ * @param {*} reactions 
+ */
+async function UpdateThoughtReactions(thoughtId, reactions) {
+
+    let reactionList = [...reactions];
+    for (let reaction in reactionList) {
+        
+        Thought.findOne({ _id: thoughtId }, async function (err, thought) {
+
+            if (thought) {
+                // Check for errors, if none, append to parent.
+                if (err) res.json(err + " " + errMsg);
+
+                // Determine when more than one is being posted.
+                thought.reactions.push(new ObjectId(reaction._id))
+                thought.reactionCount = thought.reactions.length;
+
+                // Update thought with new a reaction.
+                await Thought.updateOne({ _id: thoughtId }, { $set: thought });
+            }
+
+        });
+    }
+}
 
 
 // PUT (UPDATE) thought by its _id.
@@ -123,6 +136,18 @@ router.delete('/:_id', (req, res) => {
     Thought.deleteOne({ _id: id })
         .then((result) => res.json(result))
         .catch((err) => res.json(err + " " + errMsg));
+    
+    let users = User.find({ thoughts: id });
+    if (users) {
+        for (let user in users) {
+            let index = user.thoughts.indexOf(id);
+            if (index > -1) {
+                user.thoughts.slice(index, 1);
+                UpdateAllUsersThoughts(user.thoughts);
+            }
+        }
+    }
+
 });
 
 
@@ -151,7 +176,6 @@ function UpdateAUsersThought(thought) {
 
             // Check for errors, if none, append to parent.
             if (err) res.json(err + " " + errMsg);            
-            user.thoughts.push(thoughtId);
 
             // Update user with new a thought.
             User.updateOne({ _id: userId }, { $set: user } )

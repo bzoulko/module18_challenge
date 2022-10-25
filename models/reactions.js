@@ -33,6 +33,18 @@ Reaction.find({}).exec((err, collection) => {
                 reactionBody: 'Wow what a thought.',
                 username: 'Brian Zoulko',
             },
+            {
+                reactionBody: 'That was a great though',
+                username: 'Steven Blomberg',
+            },
+            {
+                reactionBody: 'Who thought of that!',
+                username: 'Her She Bar',
+            },
+            {
+                reactionBody: 'That was awesome!',
+                username: 'Snikers',
+            },
             (err) => (err ? handleError(err) : console.log('Created new Reaction (Seeds) document'))
         );
     }
