@@ -61,7 +61,22 @@ This program is an NoSQL database, using MongoDB to internally manage the data. 
     - Express : Express is used to assist in running the server on localhost:3001.
 
 * Link to walkthrough video.
-
+https://drive.google.com/file/d/1wKXjdX1fHW6qjEdwvbqwnl7ExPglFHh4/view
 
 ### Screen Shots.
-* npm start
+![image](https://user-images.githubusercontent.com/108200823/197836379-50b307bc-c7b4-4344-95ab-01515f00b898.png)
+![image](https://user-images.githubusercontent.com/108200823/197836432-031e0c44-b30b-4990-871c-5bd084918d05.png)
+![image](https://user-images.githubusercontent.com/108200823/197836473-3284a468-d284-47f7-89c0-341505e9c090.png)
+![image](https://user-images.githubusercontent.com/108200823/197836602-67c934bb-e484-4e20-b224-40a8a71e04a4.png)
+![image](https://user-images.githubusercontent.com/108200823/197836641-54b41bd1-8145-4650-847f-ccd7614408dc.png)
+![image](https://user-images.githubusercontent.com/108200823/197836690-d992d479-a5d1-42ce-a9e5-a4be659f9b18.png)
+![image](https://user-images.githubusercontent.com/108200823/197836730-97e01726-3694-4727-9061-f94a6b054b1a.png)
+![image](https://user-images.githubusercontent.com/108200823/197836755-0b345af9-c9a6-40f5-bcc4-6c56dc4632e8.png)
+![image](https://user-images.githubusercontent.com/108200823/197836783-4323b69c-8f39-420e-bccb-375edf26963e.png)
+![image](https://user-images.githubusercontent.com/108200823/197836829-395da9ea-827d-4c33-81b3-4d685c16796d.png)
+![image](https://user-images.githubusercontent.com/108200823/197836862-f43e4a1f-2942-4e8f-8c20-f0527b8ec9ee.png)
+![image](https://user-images.githubusercontent.com/108200823/197836902-7e70d61b-7b13-4664-9676-37647bd4db2c.png)
+![image](https://user-images.githubusercontent.com/108200823/197836951-6ba993c0-7c16-4b79-8870-bf69ed9669a8.png)
+![image](https://user-images.githubusercontent.com/108200823/197836976-ffdd2282-89f3-4719-8a5c-738858725a6c.png)
+![image](https://user-images.githubusercontent.com/108200823/197837000-abfd7c11-ed48-41bd-9501-94edf6d6d968.png)
+
